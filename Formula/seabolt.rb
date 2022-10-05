@@ -15,7 +15,7 @@ class Seabolt < Formula
     Dir.chdir('build')
     system "cmake", "..", *std_cmake_args
     system "cmake", "--build", ".", "--target", "install"
-    
+
     bin.install "bin/seabolt-cli"
   end
 
@@ -28,6 +28,31 @@ class Seabolt < Formula
 end
 
 __END__
+diff --git a/src/common/tests/catch.hpp b/src/common/tests/catch.hpp
+index 0129ca4..6251372 100644
+--- a/src/common/tests/catch.hpp
++++ b/src/common/tests/catch.hpp
+@@ -1368,7 +1368,14 @@ namespace Catch {
+
+ #ifdef CATCH_PLATFORM_MAC
+
+-    #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
++    // backported from Catch2
++    // revision b9853b4b356b83bb580c746c3a1f11101f9af54f
++    // src/catch2/internal/catch_debugger.hpp
++    #if defined(__i386__) || defined(__x86_64__)
++        #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
++    #elif defined(__aarch64__)
++        #define CATCH_TRAP()  __asm__(".inst 0xd4200000")
++    #endif
+
+ #elif defined(CATCH_PLATFORM_LINUX)
+     // If we can use inline assembler, do it because this allows us to break
+@@ -12009,4 +12016,3 @@ using Catch::Detail::Approx;
+ // end catch_reenable_warnings.h
+ // end catch.hpp
+ #endif // TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
+-
 diff --git a/src/seabolt-cli/src/main.c b/src/seabolt-cli/src/main.c
 index 41204c2..6c7db84 100644
 --- a/src/seabolt-cli/src/main.c
@@ -70,5 +95,5 @@ index 41204c2..6c7db84 100644
 +    #endif
 +#endif
  #endif
- 
+
  enum Command {
